@@ -1,0 +1,37 @@
+---
+title: "matthew_bench"
+author: "xiucheng quek"
+date: "14 October 2016"
+output: html_document
+---
+
+roc curve for benchmarking
+```{r}
+library(ggplot2)
+library(plotROC)
+library(dplyr)
+
+```
+
+
+
+```{r, echo=FALSE}
+
+
+results <- read.table('combined_results_family.tsv', header=T, sep='\t')
+family <- read.table('rna_classes.txt')
+colnames(family) <- c('family', 'sequences')
+head(results)
+results_with_family <- merge(results, family, by.x='sequence_a', by.y='sequences')
+
+
+ggplot(results_with_family, aes(x=family, y=matthew_coefficient, fill=software)) + geom_bar( stat = "summary", fun.y = "mean", position = 'dodge') + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle('Performance Benchmark ( by RNA Class)')
+
+
+cum_results <- dplyr::select(results, matthew_coefficient, software) %>% group_by(software) %>% mutate(ranking= rank(matthew_coefficient, ties.method='first'))
+
+ggplot(cum_results, aes(x=ranking, y=matthew_coefficient, color=software, group=software)) + geom_line() + ggtitle('Performance Benchmark (cumulative)')
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
