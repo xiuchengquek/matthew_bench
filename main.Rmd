@@ -18,7 +18,7 @@ library(dplyr)
 ```{r, echo=FALSE}
 
 
-results <- read.table('combined_results_family.tsv', header=T, sep='\t')
+results <- read.table('default/combined_results_family.tsv', header=T, sep='\t')
 family <- read.table('rna_classes.txt')
 colnames(family) <- c('family', 'sequences')
 head(results)

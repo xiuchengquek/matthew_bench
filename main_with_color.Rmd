@@ -1,0 +1,87 @@
+---
+title: "main_with_color"
+author: "xiucheng quek"
+date: "16 October 2016"
+output: html_document
+---
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+```
+
+## Matthew Coefficient 
+
+```{r, echo=FALSE}
+
+
+results <- read.table('with_color/completed.ct.color.results', header=T, sep='\t')
+family <- read.table('rna_classes.txt')
+colnames(family) <- c('family', 'sequences')
+head(results)
+results_with_family <- merge(results, family, by.x='sequence_a', by.y='sequences')
+
+
+ggplot(results_with_family, aes(x=family, y=matthew_coefficient, fill=software)) + geom_bar( stat = "summary", fun.y = "mean", position = 'dodge') + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle('Matthew Coefficient Performance Benchmark with --color ( by RNA Class)')
+
+
+cum_results <- dplyr::select(results, matthew_coefficient, software) %>% group_by(software) %>% mutate(ranking= rank(matthew_coefficient, ties.method='first'))
+
+ggplot(cum_results, aes(x=ranking, y=matthew_coefficient, color=software, group=software)) + geom_line() + ggtitle('Performance Benchmark with --color (cumulative)')
+
+```
+
+
+## RNA-Distance 
+
+
+The smaller the better
+```{r}
+
+results <- read.table('with_color/complete.rnadist.color.results', header=T, sep='\t')
+family <- read.table('rna_classes.txt')
+colnames(family) <- c('family', 'sequences')
+head(results)
+results_with_family <- merge(results, family, by.x='sequence_a', by.y='sequences')
+
+
+ggplot(results_with_family, aes(x=family, y=rnadist, fill=software)) + geom_bar( stat = "summary", fun.y = "mean", position = 'dodge') + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle(' RNADistance Performance Benchmark with --color ( by RNA Class)')
+
+
+cum_results <- dplyr::select(results, rnadist, software) %>% group_by(software) %>% mutate(ranking= rank(rnadist, ties.method='first'))
+
+ggplot(cum_results, aes(x=ranking, y=rnadist, color=software, group=software)) + geom_line() + ggtitle('RNADistance Performance Benchmark with --color (cumulative)')
+
+```
+
+
+## SCI-Difference
+
+
+```{r}
+
+results <- read.table('with_color/completed.sci.color.results', sep='\t', header=T)
+ref_results <- dplyr::filter(results, software=='reference')
+merged_results <- merge(results, ref_results, by =c('sequence_a', 'sequence_b'))
+merged_results$test_minus_ref <- merged_results$sci.x - merged_results$sci.y
+merged_results <- dplyr::filter(merged_results, software.x != 'reference') 
+
+
+results_with_family <- merge(merged_results, family, by.x='sequence_a', by.y='sequences')
+
+
+ggplot(results_with_family, aes(x=family, y=test_minus_ref, fill=software.x)) + geom_bar( stat = "summary", fun.y = "mean", position = 'dodge') + theme(axis.text.x = element_text(angle = 90, hjust = 1)) + ggtitle(' SCI difference ( test - ref ) Performance Benchmark with --color ( by RNA Class)')
+
+
+cum_results <- dplyr::select(merged_results, test_minus_ref, software.x) %>% group_by( software.x) %>% mutate(ranking= rank(test_minus_ref, ties.method='first'))
+
+ggplot(cum_results, aes(x=ranking, y=test_minus_ref, color=software.x, group=software.x)) + geom_line() + ggtitle('SCI difference ( test - ref )  with --color Performance Benchmark (cumulative)')
+
+dplyr::select(merged_results, test_minus_ref, software.x) %>% group_by(software.x) %>% summarise(high_sci = sum(test_minus_ref < 0 ), lower = sum(test_minus_ref > 0))
+
+```
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
